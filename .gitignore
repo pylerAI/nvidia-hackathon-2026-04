@@ -1,0 +1,80 @@
+# --- Project outputs (user-requested) ---
+artifacts/
+backup/
+sft_jsonl/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-wheel-metadata/
+
+# --- Virtual environments ---
+.venv/
+venv/
+ENV/
+env/
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- Type checkers / linters ---
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- ML / experiment tooling (often large; keep weights under artifacts/ or add patterns here) ---
+wandb/
+mlruns/
+lightning_logs/
+tensorboard/
+
+# --- Hugging Face / caches (home cache is ~/.cache; project-local cache dirs if any) ---
+.cache/
+
+# --- Environment & secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Editors ---
+.idea/
+*.swp
+*.swo
+*~
