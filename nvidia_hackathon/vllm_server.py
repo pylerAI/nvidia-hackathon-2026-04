@@ -11,7 +11,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-DEFAULT_VLLM_MODEL = "nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-FP8"
+DEFAULT_VLLM_MODEL = "nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-BF16"
 DEFAULT_VLLM_BASE_URL = "http://127.0.0.1:8000/v1"
 
 
