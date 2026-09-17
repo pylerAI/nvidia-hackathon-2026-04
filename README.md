@@ -1,17 +1,17 @@
 ## SafeWatch Minimal README
 
-이 디렉토리에서는 아래 4개만 주로 사용합니다.
+This directory mainly uses the following four entry points.
 
 1. `data_curation/build_inserted_eval_dataset.py`
 2. `run_sequential_inference.py`
 3. `evaluate.py`
 4. `visualize/app.py`
 
-전체 흐름은 `데이터 생성 -> 모델별 추론 -> 정량 평가 -> 시각화`입니다.
+The overall flow is `data generation -> per-model inference -> quantitative evaluation -> visualization`.
 
-## 환경 세팅
+## Environment setup
 
-Python 3.12 기준입니다.
+Targets Python 3.12.
 
 ```bash
 python -m venv .venv
@@ -21,7 +21,7 @@ pip install -e .
 pip install opencv-python vllm
 ```
 
-추가로 시스템에 `ffmpeg`가 필요합니다.
+`ffmpeg` is also required on the system.
 
 ```bash
 sudo apt-get update
@@ -30,10 +30,10 @@ sudo apt-get install -y ffmpeg
 
 ## 1. Data curation
 
-`data_curation/build_inserted_eval_dataset.py`는 안전한 비디오에 harmful clip을 삽입해 새로운 eval 비디오와 JSONL을 만듭니다.  
-출력 JSONL에는 비디오 경로, 프롬프트, 정답 interval/guardrail 정보가 함께 저장됩니다.
+`data_curation/build_inserted_eval_dataset.py` inserts harmful clips into safe videos to build new eval videos and a JSONL file.  
+The output JSONL stores the video path, the prompt, and the ground-truth interval/guardrail information together.
 
-예시:
+Example:
 
 ```bash
 python data_curation/build_inserted_eval_dataset.py \
@@ -44,19 +44,19 @@ python data_curation/build_inserted_eval_dataset.py \
   --summary-json /gpfs/public/artifacts/SafeWatch-Bench-200K/inserted_videos_eval.summary.json
 ```
 
-자주 쓰는 옵션:
+Frequently used options:
 
-- `--max-output-duration-sec`: 최종 비디오 최대 길이
-- `--max-harmful-duration-sec`: 삽입할 harmful clip 최대 길이
-- `--max-samples-per-subcategory`: 서브카테고리별 샘플 수 제한
-- `--dry-run`: 실제 파일 생성 없이 샘플링만 확인
+- `--max-output-duration-sec`: maximum length of the final video
+- `--max-harmful-duration-sec`: maximum length of the harmful clip to insert
+- `--max-samples-per-subcategory`: limit on the number of samples per subcategory
+- `--dry-run`: only check the sampling, without generating actual files
 
 ## 2. Sequential inference
 
-`run_sequential_inference.py`는 모델을 하나씩 vLLM 서버로 띄운 뒤, 각 모델에 대해 여러 데이터셋에 `generate.py`를 순차 실행합니다.  
-기본적으로 baseline 모델과 export된 finetuned 모델들을 자동 탐색하며, 결과는 모델별 폴더에 저장됩니다.
+`run_sequential_inference.py` brings up models one at a time on a vLLM server and, for each model, runs `generate.py` sequentially over multiple datasets.  
+By default it auto-discovers the baseline model and the exported finetuned models, and results are saved in per-model folders.
 
-예시:
+Example:
 
 ```bash
 python run_sequential_inference.py \
@@ -67,7 +67,7 @@ python run_sequential_inference.py \
   --skip-existing
 ```
 
-특정 모델만 돌리고 싶으면:
+To run only a specific model:
 
 ```bash
 python run_sequential_inference.py \
@@ -75,7 +75,7 @@ python run_sequential_inference.py \
   --output-root /path/to/results
 ```
 
-주요 출력:
+Main outputs:
 
 - `<output-root>/<model>/<dataset>/record.jsonl`
 - `<output-root>/<model>/<dataset>/raw_outputs.jsonl`
@@ -83,10 +83,10 @@ python run_sequential_inference.py \
 
 ## 3. Evaluation
 
-`evaluate.py`는 추론 결과 JSONL을 읽어서 localization(tIoU)와 guardrail F1을 집계합니다.  
-`run_sequential_inference.py`의 출력 루트를 그대로 넣으면 내부의 JSONL을 재귀적으로 읽어 모델별 결과를 비교합니다.
+`evaluate.py` reads the inference-result JSONL files and aggregates localization (tIoU) and guardrail F1.  
+If you pass the output root of `run_sequential_inference.py` as-is, it recursively reads the JSONL files inside and compares results per model.
 
-예시:
+Example:
 
 ```bash
 python evaluate.py \
@@ -98,41 +98,41 @@ python evaluate.py \
   --plot-dir artifacts/eval_plots
 ```
 
-자주 보는 지표:
+Commonly inspected metrics:
 
-- `mean_micro_f1`: 매칭된 interval 기준 guardrail 성능
-- `mean_tiou_matched`: 매칭된 구간의 평균 tIoU
-- `mean_gt_coverage`: GT 구간이 얼마나 커버됐는지
-- `frac_records_with_tiou_match`: 최소 1개 이상 매칭된 샘플 비율
+- `mean_micro_f1`: guardrail performance over matched intervals
+- `mean_tiou_matched`: average tIoU of the matched intervals
+- `mean_gt_coverage`: how much of the GT intervals is covered
+- `frac_records_with_tiou_match`: fraction of samples with at least one match
 
 ## 4. Visualization
 
-`visualize/app.py`는 notrain 결과와 trained 결과를 같은 비디오에서 비교하는 Streamlit 앱입니다.  
-GT interval, 두 모델의 harmful interval, label mismatch, IoU 차이를 한 화면에서 확인할 수 있습니다.
+`visualize/app.py` is a Streamlit app that compares the notrain results and the trained results on the same video.  
+It lets you check the GT interval, both models' harmful intervals, label mismatches, and IoU differences on a single screen.
 
-실행:
+Run:
 
 ```bash
 streamlit run visualize/app.py
 ```
 
-주의:
+Notes:
 
-- 앱은 현재 코드 내부 상수 경로를 직접 사용합니다.
-- 실행 전 `visualize/app.py`의 `DEFAULT_NOTRAIN_PATH`, `DEFAULT_TRAINED_PATH`, `DEFAULT_GT_PATH`를 실제 파일 경로로 맞춰야 합니다.
+- The app currently uses constant paths hard-coded in the source.
+- Before running, set `DEFAULT_NOTRAIN_PATH`, `DEFAULT_TRAINED_PATH`, and `DEFAULT_GT_PATH` in `visualize/app.py` to the actual file paths.
 
-## 빠른 실행 순서
+## Quick start sequence
 
 ```bash
-# 1) eval 데이터 만들기
+# 1) Build the eval data
 python data_curation/build_inserted_eval_dataset.py ...
 
-# 2) 모델별 추론
+# 2) Run inference per model
 python run_sequential_inference.py ...
 
-# 3) 결과 집계
+# 3) Aggregate the results
 python evaluate.py --dirs /path/to/sequential_vllm_inference ...
 
-# 4) 시각화
+# 4) Visualize
 streamlit run visualize/app.py
 ```
